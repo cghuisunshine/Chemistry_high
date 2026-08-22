@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Chemistry High 仓库内容索引">
+  <title>Chemistry High｜内容目录</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #10253f;
+      --muted: #637488;
+      --line: #d8e0e6;
+      --paper: #ffffff;
+      --canvas: #f5f8fa;
+      --navy: #123555;
+      --link: #2d6d9c;
+      --link-hover: #1f5278;
+      --warm: #df775f;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--canvas);
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-size: 16px;
+      line-height: 1.55;
+    }
+
+    a { color: inherit; }
+
+    .topbar {
+      background: var(--navy);
+      border-bottom: 4px solid var(--warm);
+      color: #fff;
+    }
+
+    .topbar-inner,
+    main,
+    footer {
+      width: min(980px, calc(100% - 40px));
+      margin-inline: auto;
+    }
+
+    .topbar-inner {
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .site-name {
+      margin: 0;
+      font-size: 19px;
+      font-weight: 720;
+      letter-spacing: -.01em;
+    }
+
+    .repo-link {
+      color: #d4e7f1;
+      font-size: 14px;
+      text-underline-offset: 3px;
+    }
+
+    .repo-link:hover { color: #fff; }
+
+    main { padding-block: 42px 52px; }
+
+    .intro {
+      max-width: 680px;
+      margin-bottom: 34px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(28px, 5vw, 40px);
+      line-height: 1.2;
+      letter-spacing: -.025em;
+    }
+
+    .intro p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    section + section { margin-top: 36px; }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 17px;
+      line-height: 1.4;
+    }
+
+    .file-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--paper);
+    }
+
+    .file-list li + li { border-top: 1px solid var(--line); }
+
+    .file-link {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 20px;
+      align-items: center;
+      padding: 17px 18px;
+      text-decoration: none;
+      transition: background-color 140ms ease;
+    }
+
+    .file-link:hover { background: #f0f5f8; }
+
+    .file-link:focus-visible {
+      position: relative;
+      z-index: 1;
+      outline: 3px solid rgba(45, 109, 156, .32);
+      outline-offset: -3px;
+    }
+
+    .file-title {
+      display: block;
+      color: var(--link);
+      font-weight: 680;
+    }
+
+    .file-link:hover .file-title { color: var(--link-hover); }
+
+    .file-path {
+      display: block;
+      margin-top: 3px;
+      overflow-wrap: anywhere;
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+    }
+
+    .file-type {
+      min-width: 45px;
+      padding: 3px 7px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 750;
+      text-align: center;
+    }
+
+    footer {
+      padding-block: 22px 34px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    footer p { margin: 0; }
+
+    @media (max-width: 560px) {
+      .topbar-inner,
+      main,
+      footer { width: min(100% - 28px, 980px); }
+
+      .topbar-inner { min-height: 58px; }
+      .repo-link { display: none; }
+      main { padding-block: 30px 42px; }
+      .file-link { padding: 15px 14px; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <p class="site-name">Chemistry High</p>
+      <a class="repo-link" href="https://github.com/cghuisunshine/Chemistry_high">在 GitHub 上查看仓库</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="intro">
+      <h1>内容目录</h1>
+      <p>高中化学教材与离线互动课程。选择一个文件即可打开。</p>
+    </div>
+
+    <section aria-labelledby="tutorials-title">
+      <h2 id="tutorials-title">互动课程</h2>
+      <ul class="file-list">
+        <li>
+          <a class="file-link" href="chemistry-offline-tutorials/index.html">
+            <span>
+              <span class="file-title">物质的量互动教程</span>
+              <span class="file-path">chemistry-offline-tutorials/index.html</span>
+            </span>
+            <span class="file-type">HTML</span>
+          </a>
+        </li>
+        <li>
+          <a class="file-link" href="chemistry-offline-tutorials/lesson-06-amount-of-substance-upper.html">
+            <span>
+              <span class="file-title">第六讲：物质的量（上）</span>
+              <span class="file-path">chemistry-offline-tutorials/lesson-06-amount-of-substance-upper.html</span>
+            </span>
+            <span class="file-type">HTML</span>
+          </a>
+        </li>
+        <li>
+          <a class="file-link" href="chemistry-offline-tutorials/lesson-07-gas-molar-volume-lower.html">
+            <span>
+              <span class="file-title">第七讲：物质的量（下）</span>
+              <span class="file-path">chemistry-offline-tutorials/lesson-07-gas-molar-volume-lower.html</span>
+            </span>
+            <span class="file-type">HTML</span>
+          </a>
+        </li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="references-title">
+      <h2 id="references-title">教材与说明</h2>
+      <ul class="file-list">
+        <li>
+          <a class="file-link" href="5【高中化学】必修一人教版_目录书签.pdf">
+            <span>
+              <span class="file-title">高中化学必修一（人教版）— 目录书签版</span>
+              <span class="file-path">5【高中化学】必修一人教版_目录书签.pdf</span>
+            </span>
+            <span class="file-type">PDF</span>
+          </a>
+        </li>
+        <li>
+          <a class="file-link" href="README.md">
+            <span>
+              <span class="file-title">仓库说明</span>
+              <span class="file-path">README.md</span>
+            </span>
+            <span class="file-type">MD</span>
+          </a>
+        </li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>此目录收录 Git 当前追踪的学习资料。</p>
+  </footer>
+</body>
+</html>
