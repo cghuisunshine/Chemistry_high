@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="高中化学必修一（人教版）可搜索目录与 PDF 阅读器">
+  <title>高中化学必修一｜目录阅读器</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #10253f;
+      --muted: #637488;
+      --line: #d8e0e6;
+      --paper: #ffffff;
+      --canvas: #f5f8fa;
+      --navy: #123555;
+      --link: #2d6d9c;
+      --link-hover: #1f5278;
+      --warm: #df775f;
+      --active: #e8f0f5;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body { height: 100%; }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: var(--canvas);
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    button,
+    input { font: inherit; }
+
+    button,
+    a { -webkit-tap-highlight-color: transparent; }
+
+    .app {
+      height: 100dvh;
+      display: grid;
+      grid-template-rows: 58px minmax(0, 1fr);
+    }
+
+    .toolbar {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 18px;
+      background: var(--navy);
+      border-bottom: 3px solid var(--warm);
+      color: #fff;
+    }
+
+    .book-title {
+      min-width: 0;
+      margin: 0;
+      overflow: hidden;
+      font-size: 17px;
+      font-weight: 720;
+      letter-spacing: -.01em;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .toolbar-button {
+      min-height: 34px;
+      padding: 6px 10px;
+      border: 1px solid rgba(255, 255, 255, .42);
+      border-radius: 7px;
+      background: transparent;
+      color: #fff;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background-color 140ms ease, border-color 140ms ease;
+    }
+
+    .toolbar-button:hover {
+      background: rgba(255, 255, 255, .1);
+      border-color: rgba(255, 255, 255, .72);
+    }
+
+    .toolbar-button:focus-visible,
+    .toc-link:focus-visible,
+    .search-input:focus-visible {
+      outline: 3px solid rgba(223, 119, 95, .48);
+      outline-offset: 2px;
+    }
+
+    .toc-toggle { display: none; }
+
+    .workspace {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 330px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--paper);
+      border-right: 1px solid var(--line);
+    }
+
+    .sidebar-header {
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .sidebar-title {
+      margin: 0 0 11px;
+      font-size: 16px;
+    }
+
+    .search-input {
+      width: 100%;
+      height: 38px;
+      padding: 7px 10px;
+      border: 1px solid #bcc9d2;
+      border-radius: 7px;
+      background: #fff;
+      color: var(--ink);
+    }
+
+    .search-input::placeholder { color: #788897; }
+
+    .toc-scroll {
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: 8px 0 22px;
+    }
+
+    .toc-list,
+    .toc-children {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .toc-group { border-bottom: 1px solid #edf1f4; }
+
+    .toc-children {
+      padding: 1px 0 8px;
+      background: #fbfcfd;
+    }
+
+    .toc-link {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: start;
+      padding: 9px 18px;
+      color: var(--ink);
+      text-decoration: none;
+      transition: background-color 130ms ease, color 130ms ease;
+    }
+
+    .toc-link:hover {
+      background: #f0f5f8;
+      color: var(--link-hover);
+    }
+
+    .toc-link[aria-current="page"] {
+      background: var(--active);
+      color: var(--link-hover);
+      box-shadow: inset 3px 0 0 var(--warm);
+    }
+
+    .toc-group > .toc-link { font-weight: 700; }
+
+    .toc-children .toc-link {
+      padding-left: 32px;
+      font-size: 14px;
+    }
+
+    .toc-label { min-width: 0; }
+
+    .page-number {
+      padding-top: 1px;
+      color: var(--muted);
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .toc-link[aria-current="page"] .page-number { color: var(--link-hover); }
+
+    .no-results {
+      margin: 18px;
+      color: var(--muted);
+    }
+
+    .viewer-panel {
+      min-width: 0;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: 34px minmax(0, 1fr);
+      background: #e6ebee;
+    }
+
+    .viewer-status {
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      border-bottom: 1px solid #cbd4da;
+      background: #f7f9fa;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .pdf-frame {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #e6ebee;
+    }
+
+    .mobile-label { display: none; }
+
+    @media (max-width: 760px) {
+      .toolbar { padding-inline: 12px; gap: 10px; }
+      .book-title { font-size: 15px; }
+      .desktop-label { display: none; }
+      .mobile-label { display: inline; }
+      .toc-toggle { display: inline-block; }
+
+      .workspace {
+        position: relative;
+        display: block;
+      }
+
+      .sidebar,
+      .viewer-panel {
+        position: absolute;
+        inset: 0;
+      }
+
+      .sidebar {
+        z-index: 1;
+        display: none;
+        border-right: 0;
+      }
+
+      .workspace.toc-open .sidebar { display: flex; }
+      .workspace.toc-open .viewer-panel { visibility: hidden; }
+      .toc-link { padding-block: 11px; }
+      .toc-children .toc-link { padding-left: 34px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="toolbar">
+      <button class="toolbar-button toc-toggle" id="toc-toggle" type="button" aria-controls="sidebar" aria-expanded="false">
+        目录
+      </button>
+      <h1 class="book-title">高中化学必修一 <span class="desktop-label">· 人教版</span></h1>
+      <div class="toolbar-actions">
+        <a class="toolbar-button" id="open-pdf" href="5【高中化学】必修一人教版_目录书签.pdf#page=5" target="_blank" rel="noopener">
+          <span class="desktop-label">在新标签页打开 PDF</span><span class="mobile-label">打开 PDF</span>
+        </a>
+      </div>
+    </header>
+
+    <div class="workspace" id="workspace">
+      <aside class="sidebar" id="sidebar" aria-label="教材目录">
+        <div class="sidebar-header">
+          <h2 class="sidebar-title">目录</h2>
+          <input class="search-input" id="toc-search" type="search" placeholder="搜索章节" autocomplete="off" aria-label="搜索目录">
+        </div>
+
+        <nav class="toc-scroll" aria-label="PDF 书签">
+          <ul class="toc-list" id="toc-list">
+            <li class="toc-item" data-title="目录"><a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=5" data-page="5"><span class="toc-label">目录</span><span class="page-number">PDF 5</span></a></li>
+            <li class="toc-item" data-title="绪言"><a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=7" data-page="7"><span class="toc-label">绪言</span><span class="page-number">PDF 7</span></a></li>
+
+            <li class="toc-item toc-group" data-title="第一章 物质及其变化">
+              <a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=10" data-page="10"><span class="toc-label">第一章 物质及其变化</span><span class="page-number">PDF 10</span></a>
+              <ul class="toc-children">
+                <li class="toc-item" data-title="第一节 物质的分类及转化"><a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=11" data-page="11"><span class="toc-label">第一节 物质的分类及转化</span><span class="page-number">PDF 11</span></a></li>
+                <li class="toc-item" data-title="第二节 离子反应"><a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=19" data-page="19"><span class="toc-label">第二节 离子反应</span><span class="page-number">PDF 19</span></a></li>
+                <li class="toc-item" data-title="第三节 氧化还原反应"><a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=27" data-page="27"><span class="toc-label">第三节 氧化还原反应</span><span class="page-number">PDF 27</span></a></li>
+                <li class="toc-item" data-title="整理与提升"><a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=34" data-page="34"><span class="toc-label">整理与提升</span><span class="page-number">PDF 34</span></a></li>
+              </ul>
+            </li>
+
+            <li class="toc-item toc-group" data-title="第二章 海水中的重要元素 钠和氯">
+              <a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=38" data-page="38"><span class="toc-label">第二章 海水中的重要元素——钠和氯</span><span class="page-number">PDF 38</span></a>
+              <ul class="toc-children">
+                <li class="toc-item" data-title="第一节 钠及其化合物"><a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=39" data-page="39"><span class="toc-label">第一节 钠及其化合物</span><span class="page-number">PDF 39</span></a></li>
+                <li class="toc-item" data-title="第二节 氯及其化合物"><a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=49" data-page="49"><span class="toc-label">第二节 氯及其化合物</span><span class="page-number">PDF 49</span></a></li>
+                <li class="toc-item" data-title="第三节 物质的量"><a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=58" data-page="58"><span class="toc-label">第三节 物质的量</span><span class="page-number">PDF 58</span></a></li>
+                <li class="toc-item" data-title="整理与提升"><a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=67" data-page="67"><span class="toc-label">整理与提升</span><span class="page-number">PDF 67</span></a></li>
+                <li class="toc-item" data-title="实验活动 1 配制一定物质的量浓度的溶液"><a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=70" data-page="70"><span class="toc-label">实验活动 1 配制一定物质的量浓度的溶液</span><span class="page-number">PDF 70</span></a></li>
+              </ul>
+            </li>
+
+            <li class="toc-item toc-group" data-title="第三章 铁 金属材料">
+              <a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=72" data-page="72"><span class="toc-label">第三章 铁 金属材料</span><span class="page-number">PDF 72</span></a>
+              <ul class="toc-children">
+                <li class="toc-item" data-title="第一节 铁及其化合物"><a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=73" data-page="73"><span class="toc-label">第一节 铁及其化合物</span><span class="page-number">PDF 73</span></a></li>
+                <li class="toc-item" data-title="第二节 金属材料"><a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=83" data-page="83"><span class="toc-label">第二节 金属材料</span><span class="page-number">PDF 83</span></a></li>
+                <li class="toc-item" data-title="整理与提升"><a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=92" data-page="92"><span class="toc-label">整理与提升</span><span class="page-number">PDF 92</span></a></li>
+                <li class="toc-item" data-title="实验活动 2 铁及其化合物的性质"><a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=95" data-page="95"><span class="toc-label">实验活动 2 铁及其化合物的性质</span><span class="page-number">PDF 95</span></a></li>
+              </ul>
+            </li>
+
+            <li class="toc-item toc-group" data-title="第四章 物质结构 元素周期律">
+              <a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=96" data-page="96"><span class="toc-label">第四章 物质结构 元素周期律</span><span class="page-number">PDF 96</span></a>
+              <ul class="toc-children">
+                <li class="toc-item" data-title="第一节 原子结构与元素周期表"><a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=97" data-page="97"><span class="toc-label">第一节 原子结构与元素周期表</span><span class="page-number">PDF 97</span></a></li>
+                <li class="toc-item" data-title="第二节 元素周期律"><a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=112" data-page="112"><span class="toc-label">第二节 元素周期律</span><span class="page-number">PDF 112</span></a></li>
+                <li class="toc-item" data-title="第三节 化学键"><a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=118" data-page="118"><span class="toc-label">第三节 化学键</span><span class="page-number">PDF 118</span></a></li>
+                <li class="toc-item" data-title="整理与提升"><a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=123" data-page="123"><span class="toc-label">整理与提升</span><span class="page-number">PDF 123</span></a></li>
+                <li class="toc-item" data-title="实验活动 3 同周期 同主族元素性质的递变"><a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=127" data-page="127"><span class="toc-label">实验活动 3 同周期、同主族元素性质的递变</span><span class="page-number">PDF 127</span></a></li>
+              </ul>
+            </li>
+
+            <li class="toc-item" data-title="附录 1 实验室突发事件的应对措施和常见废弃物的处理方法"><a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=128" data-page="128"><span class="toc-label">附录Ⅰ 实验室突发事件的应对措施和常见废弃物的处理方法</span><span class="page-number">PDF 128</span></a></li>
+            <li class="toc-item" data-title="附录 2 一些化学品安全使用标识"><a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=129" data-page="129"><span class="toc-label">附录Ⅱ 一些化学品安全使用标识</span><span class="page-number">PDF 129</span></a></li>
+            <li class="toc-item" data-title="附录 3 名词索引"><a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=131" data-page="131"><span class="toc-label">附录Ⅲ 名词索引</span><span class="page-number">PDF 131</span></a></li>
+            <li class="toc-item" data-title="附录 4 部分酸 碱和盐的溶解性表 室温"><a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=132" data-page="132"><span class="toc-label">附录Ⅳ 部分酸、碱和盐的溶解性表（室温）</span><span class="page-number">PDF 132</span></a></li>
+            <li class="toc-item" data-title="附录 5 一些常见元素中英文名称对照表"><a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=133" data-page="133"><span class="toc-label">附录Ⅴ 一些常见元素中英文名称对照表</span><span class="page-number">PDF 133</span></a></li>
+            <li class="toc-item" data-title="附录 6 相对原子质量表"><a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=134" data-page="134"><span class="toc-label">附录Ⅵ 相对原子质量表</span><span class="page-number">PDF 134</span></a></li>
+            <li class="toc-item" data-title="元素周期表"><a class="toc-link" href="5【高中化学】必修一人教版_目录书签.pdf#page=138" data-page="138"><span class="toc-label">元素周期表</span><span class="page-number">PDF 138</span></a></li>
+          </ul>
+          <p class="no-results" id="no-results" hidden>没有找到匹配的章节。</p>
+        </nav>
+      </aside>
+
+      <main class="viewer-panel" aria-label="PDF 阅读器">
+        <div class="viewer-status" id="viewer-status" aria-live="polite">正在显示：目录 · PDF 第 5 页</div>
+        <iframe
+          class="pdf-frame"
+          id="pdf-frame"
+          name="pdf-viewer"
+          src="5【高中化学】必修一人教版_目录书签.pdf#page=5&amp;zoom=page-width"
+          title="高中化学必修一 PDF">
+        </iframe>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const pdfPath = '5【高中化学】必修一人教版_目录书签.pdf';
+      const frame = document.querySelector('#pdf-frame');
+      const links = [...document.querySelectorAll('.toc-link')];
+      const groups = [...document.querySelectorAll('.toc-group')];
+      const search = document.querySelector('#toc-search');
+      const noResults = document.querySelector('#no-results');
+      const status = document.querySelector('#viewer-status');
+      const openPdf = document.querySelector('#open-pdf');
+      const workspace = document.querySelector('#workspace');
+      const toggle = document.querySelector('#toc-toggle');
+
+      function pageFromHash() {
+        const match = location.hash.match(/^#page=(\d+)$/);
+        return match ? Number(match[1]) : 5;
+      }
+
+      function goToPage(page, label, updateHistory = true) {
+        const target = `${pdfPath}#page=${page}&zoom=page-width`;
+        frame.src = target;
+        openPdf.href = `${pdfPath}#page=${page}`;
+        status.textContent = `正在显示：${label} · PDF 第 ${page} 页`;
+
+        links.forEach((link) => {
+          if (Number(link.dataset.page) === page) {
+            link.setAttribute('aria-current', 'page');
+          } else {
+            link.removeAttribute('aria-current');
+          }
+        });
+
+        if (updateHistory) history.replaceState(null, '', `#page=${page}`);
+
+        if (matchMedia('(max-width: 760px)').matches) {
+          workspace.classList.remove('toc-open');
+          toggle.setAttribute('aria-expanded', 'false');
+          toggle.textContent = '目录';
+        }
+      }
+
+      links.forEach((link) => {
+        link.addEventListener('click', (event) => {
+          event.preventDefault();
+          goToPage(Number(link.dataset.page), link.querySelector('.toc-label').textContent.trim());
+        });
+      });
+
+      search.addEventListener('input', () => {
+        const query = search.value.trim().toLocaleLowerCase('zh-CN');
+        let visibleCount = 0;
+
+        document.querySelectorAll('.toc-list > .toc-item:not(.toc-group)').forEach((item) => {
+          const match = item.dataset.title.toLocaleLowerCase('zh-CN').includes(query);
+          item.hidden = !match;
+          if (match) visibleCount += 1;
+        });
+
+        groups.forEach((group) => {
+          const ownMatch = group.dataset.title.toLocaleLowerCase('zh-CN').includes(query);
+          const children = [...group.querySelectorAll('.toc-children > .toc-item')];
+          let childMatches = 0;
+
+          children.forEach((child) => {
+            const match = child.dataset.title.toLocaleLowerCase('zh-CN').includes(query);
+            child.hidden = query ? !(ownMatch || match) : false;
+            if (!child.hidden) childMatches += 1;
+          });
+
+          group.hidden = !(ownMatch || childMatches > 0);
+          if (!group.hidden) visibleCount += 1 + childMatches;
+        });
+
+        noResults.hidden = visibleCount > 0;
+      });
+
+      toggle.addEventListener('click', () => {
+        const isOpen = workspace.classList.toggle('toc-open');
+        toggle.setAttribute('aria-expanded', String(isOpen));
+        toggle.textContent = isOpen ? '关闭' : '目录';
+        if (isOpen) search.focus();
+      });
+
+      window.addEventListener('hashchange', () => {
+        const page = pageFromHash();
+        const match = links.find((link) => Number(link.dataset.page) === page);
+        goToPage(page, match ? match.querySelector('.toc-label').textContent.trim() : `PDF 第 ${page} 页`, false);
+      });
+
+      const initialPage = pageFromHash();
+      const initialLink = links.find((link) => Number(link.dataset.page) === initialPage) || links[0];
+      goToPage(initialPage, initialLink.querySelector('.toc-label').textContent.trim(), false);
+    })();
+  </script>
+</body>
+</html>
